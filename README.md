@@ -5,7 +5,7 @@ See Method sections "Behavioural classification and variables" and "Statistical 
 
 Raw GPS data are on movebank.org under the project named “Barn owl (Tyto alba)”, ID 231741797.
 
-Raw movement data annotate with behavioural classification from accelerometer data can be found at https://github.com/kimschalcher/data-availability-Schalcher-et-al-eLife (firstly used in Schalcher et al. 2024 eLife).
+Raw movement data annotate with behavioural classification from accelerometer data can be found at https://github.com/kimschalcher/data-availability-Schalcher-et-al-eLife (firstly used in Schalcher et al. 2024 eLife https://elifesciences.org/articles/87775).
 
 
 ## Tables (.csv)
