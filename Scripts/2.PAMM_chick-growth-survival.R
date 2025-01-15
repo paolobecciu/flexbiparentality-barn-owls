@@ -34,7 +34,7 @@ packages(mgcv)
 
 # Load data ####
 
-mypath <- "/Users/pbecciu/Desktop/Lausanne/Work/ms/Partnership/code-tables_shared/"
+mypath <- "your/path/"
 subset.night.z <- read.csv(paste0(mypath, "nightly_params.csv")) # movement/foraging parameters relative to the Male and Female of the pair averaged by night
 subset.broodID.z <- read.csv(paste0(mypath, "Pair_params.csv"))  # movement/foraging parameters relative to the Male and Female of the pair averaged by individual
 cox.foragingMF <- read.csv(paste0(mypath, "pamm_table.csv"))
