@@ -3,6 +3,11 @@ Data and script to replicate analysis and figures of the preprint titled "Dynami
 
 See Method sections "Behavioural classification and variables" and "Statistical analysis" before running the scripts.
 
+Raw GPS data are on movebank.org under the project named “Barn owl (Tyto alba)”, ID 231741797.
+
+Raw movement data annotate with behavioural classification from accelerometer data can be found at https://github.com/kimschalcher/data-availability-Schalcher-et-al-eLife (firstly used in Schalcher et al. 2024 eLife).
+
+
 ## Tables (.csv)
 - Pair_params: It contains all variables relative to the male and female of each one of the 68 pairs. Movement/foraging variables were averaged or summed per individal
 - nightly_params: Same as "Pair_params" but movement/foraging variables were averaged by night.
