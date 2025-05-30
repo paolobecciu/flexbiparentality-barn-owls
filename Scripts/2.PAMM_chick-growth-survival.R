@@ -1,9 +1,8 @@
 
-# Paper: Dynamic parental roles revealed by fine-scale hunting behaviour with concurrent pair tracking in the wild #
-## Script relative to the Result sub-sections: 
-### "Temporal dynamics of foraging probability", 
-### "Contributions of specific parental behaviours to nestling survival" and 
-### "Impact of flexible biparental care on chick growth"
+# Paper: Real-time coordination of parental provisioning revealed by high-resolution biologging in the wild #
+## Script relative to the Result sub-section: 
+### "Within-night adjustments of parental effort" only results about piece‐wise exponential additive mixed model (PAMM),
+### "Contributions of specific parental behaviours to nestling survival and growth"
 ## some graphs and model summaries produced here are present in Supplementary Materials
 
 
@@ -31,10 +30,12 @@ packages(emmeans)
 packages(sjPlot)
 packages(pammtools)
 packages(mgcv)
+packages(performance)
+packages(viridis)
 
 # Load data ####
 
-mypath <- "your/path/"
+mypath <- "/Users/pbecciu/Desktop/Personal/CH/Lausanne/Work/ms/Partnership/code-tables_shared/"
 subset.night.z <- read.csv(paste0(mypath, "nightly_params.csv")) # movement/foraging parameters relative to the Male and Female of the pair averaged by night
 subset.broodID.z <- read.csv(paste0(mypath, "Pair_params.csv"))  # movement/foraging parameters relative to the Male and Female of the pair averaged by individual
 cox.foragingMF <- read.csv(paste0(mypath, "pamm_table.csv"))
@@ -43,7 +44,7 @@ chicks_table <- read.csv(paste0(mypath, "chicks_table.csv"))
 
 #_____________________________________________####
 # Time-to-event model using PAMMs (pammtools) ####
-# Temporal dynamics of foraging probability (Fig. 2 E, F)  ####
+# (Fig. 2 E, F)  ####
 #_____________________________________________####
 
 ## subset by sex ####
@@ -53,31 +54,31 @@ db_gamM <- cox.foragingMF |> filter(Sex == "male")
 
 ## females ####
 pedF <- db_gamF |>
-  dplyr::select(BroodID_night, Sex, prey.nest.Fcoop01, time, status) |>
-  as_ped(Surv(time, status)~ Sex + prey.nest.Fcoop01 + BroodID_night, zero = -0.1) |>
+  dplyr::select(BroodID_night, prey.nest.Fcoop01, time, status) |>
+  mutate(BroodID_night = as.factor(BroodID_night)) |>
+  as_ped(Surv(time, status)~ prey.nest.Fcoop01 + BroodID_night, zero = -0.1) |>
   na.omit()
 
-plot(check_distribution(pedF$ped_status))
-pamm_F <- pamm(
-  ped_status ~ s(tend) + s(prey.nest.Fcoop01) + ti(tend, prey.nest.Fcoop01) + s(BroodID_night, bs = "re"),
-  data = pedF)
 
+pamm_F <- pammtools::pamm(
+  ped_status ~ 
+    s(tend) + 
+    s(prey.nest.Fcoop01) + 
+    ti(tend, prey.nest.Fcoop01) +  
+    s(BroodID_night, bs = "re"),
+  data = pedF,
+  engine = "bam",
+  method = "fREML",
+  discretize = T)
 
 summary(pamm_F)
-plot(pamm_F)
-gg_re(pamm_F)
 
-gam.check(pamm_F)
-
-# pedF_df <- pedF |> 
-#   make_newdata(tend = unique(tend), prey.nest.Fcoop01 = seq_range(prey.nest.Fcoop01, by = 0.25), BroodID_night = unique(BroodID_night)) |>
-#   filter(prey.nest.Fcoop01 < 0.6)
 
 pedF_df <- pedF |> 
   make_newdata(tend = unique(tend), prey.nest.Fcoop01 = seq_range(prey.nest.Fcoop01, by = 0.1), BroodID_night = first(BroodID_night)) |>
   filter(prey.nest.Fcoop01 < 0.6)
 
-# plot "survival" probability
+# plot "foraging" probability
 
 pedF_df_probs <- pedF_df |> group_by(BroodID_night, prey.nest.Fcoop01) |> add_surv_prob(pamm_F)
 
@@ -85,14 +86,13 @@ plot_pammF <- ggplot(pedF_df_probs,
                      aes(x = tend, y = surv_prob, ymax = surv_lower, ymin = surv_upper, group = prey.nest.Fcoop01)) +
   geom_line(aes(col = prey.nest.Fcoop01)) + 
   geom_ribbon(aes(fill = prey.nest.Fcoop01), alpha = 0.2) +
-  scale_color_cvi_c("cvi_purples") +
-  scale_fill_cvi_c("cvi_purples") +
+  scale_color_viridis_c() +
+  scale_fill_viridis_c() +
   labs(title = "Females",
        y = expression(hat(F)(t)),
        x = paste0(expression(t), " ", "(hours from dusk)"),
-       col = "prop.bip",
-       fill = "prop.bip") +
-  THEME
+       col = "FprovSHARE",
+       fill = "FprovSHARE") 
 
 # plot hazard
 
@@ -101,14 +101,13 @@ pedF_df_haz <- pedF_df |> add_hazard(pamm_F)
 ggplot(pedF_df_haz, aes(x = tend, group = prey.nest.Fcoop01)) +
   geom_stephazard(aes(y = hazard, col = prey.nest.Fcoop01)) +
   geom_stepribbon(aes(ymin = ci_lower, ymax = ci_upper, fill = prey.nest.Fcoop01), alpha = 0.2) +
-  scale_color_cvi_c("cvi_purples") +
-  scale_fill_cvi_c("cvi_purples") +
+  scale_color_viridis_c() +
+  scale_fill_viridis_c() +
   labs(title = "Females",
        y = expression(hat(Lambda)(t)),
        x = paste0(expression(t), " ", "(hours from dusk)"),
        col = "prop.bip",
-       fill = "prop.bip") +
-  THEME
+       fill = "prop.bip")
 
 # plot cumulative hazard
 
@@ -118,57 +117,56 @@ ggplot(pedF_df_cumhaz,
        aes(x = tend, y = cumu_hazard, ymin = cumu_lower, ymax = cumu_upper, group = prey.nest.Fcoop01)) +
   geom_hazard(aes(col = prey.nest.Fcoop01)) + 
   geom_ribbon(aes(fill = prey.nest.Fcoop01), alpha = 0.2) +
-  scale_color_cvi_c("cvi_purples") +
-  scale_fill_cvi_c("cvi_purples") +
+  scale_color_viridis_c() +
+  scale_fill_viridis_c() +
   labs(title = "Females",
        y = expression(hat(Lambda)(t)),
        x = paste0(expression(t), " ", "(hours from dusk)"),
        col = "prop.bip",
-       fill = "prop.bip") +
-  THEME
+       fill = "prop.bip")
 
 ## males ####
 pedM <- db_gamM |>
-  dplyr::select(BroodID_night, Sex, prey.nest.Fcoop01, time, status) |>
-  as_ped(Surv(time, status)~ Sex + prey.nest.Fcoop01 + BroodID_night, zero = -0.1) |>
+  dplyr::select(BroodID_night, prey.nest.Fcoop01, time, status) |>
+  mutate(BroodID_night = as.factor(BroodID_night)) |>
+  as_ped(Surv(time, status)~ prey.nest.Fcoop01 + BroodID_night, zero = -0.1) |>
   na.omit()
 
 
 pamm_M <- pamm(
-  ped_status ~ s(tend) + s(prey.nest.Fcoop01) + ti(tend, prey.nest.Fcoop01) + s(BroodID_night, bs = "re"),
-  data = pedM)
+  ped_status ~ 
+    s(tend) + 
+    s(prey.nest.Fcoop01) + 
+    ti(tend, prey.nest.Fcoop01) +  
+  s(BroodID_night, bs = "re"),
+  data = pedM,
+  engine = "bam",
+  method = "fREML",
+  discretize = T)
 
 
 summary(pamm_M)
-plot(pamm_M)
-gg_re(pamm_M)
-
-gam.check(pamm_M)
-
-# pedF_df <- pedF |> 
-#   make_newdata(tend = unique(tend), prey.nest.Fcoop01 = seq_range(prey.nest.Fcoop01, by = 0.25), BroodID_night = unique(BroodID_night)) |>
-#   filter(prey.nest.Fcoop01 < 0.6)
 
 pedM_df <- pedM |> 
   make_newdata(tend = unique(tend), prey.nest.Fcoop01 = seq_range(prey.nest.Fcoop01, by = 0.1), BroodID_night = first(BroodID_night)) |>
   filter(prey.nest.Fcoop01 < 0.6)
 
-# plot "survival" probability
-#Survival Function, S(t): the probability that an individual will survive beyond time t [Pr(T>t)]
+# plot "foraging" probability
+
 pedM_df_probs <- pedM_df |> group_by(BroodID_night, prey.nest.Fcoop01) |> add_surv_prob(pamm_M)
 
 plot_pammM <- ggplot(pedM_df_probs, 
                      aes(x = tend, y = surv_prob, ymax = surv_lower, ymin = surv_upper, group = prey.nest.Fcoop01)) +
   geom_line(aes(col = prey.nest.Fcoop01)) + 
   geom_ribbon(aes(fill = prey.nest.Fcoop01), alpha = 0.2) +
-  scale_color_cvi_c("cvi_purples") +
-  scale_fill_cvi_c("cvi_purples") +
+  scale_color_viridis_c() +
+  scale_fill_viridis_c() +
   labs(title = "Males",
        y = expression(hat(F)(t)),
        x = paste0(expression(t), " ", "(hours from dusk)"),
        col = "prop.bip",
-       fill = "prop.bip") +
-  THEME
+       fill = "prop.bip") 
+plot_pammM
 
 # plot hazard
 #Hazard Function, h(t): the instantaneous potential of experiencing an event at time t, conditional on having "survived" to that time
