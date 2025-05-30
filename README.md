@@ -1,5 +1,5 @@
 # Flexible biparental care in barn owls
-Data and script to replicate analysis and figures of the unpubished study titled "Real-time coordination of parental provisioning revealed by high-resolution biologging in the wild" under review.. 
+Data and script to replicate analysis and figures of the unpubished study titled "Real-time coordination of parental provisioning revealed by high-resolution biologging in the wild" under review.
 
 See Method sections before running the scripts.
 
