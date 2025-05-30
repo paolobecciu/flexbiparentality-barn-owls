@@ -12,7 +12,7 @@ Raw movement data annotated with behavioural classification from accelerometer d
 - Pair_params: It contains all variables relative to the male and female of each one of the 68 pairs. Movement/foraging variables were averaged or summed per individal
 - nightly_params: Same as "Pair_params" but movement/foraging variables were averaged by night.
 - pamm_table: Table arranged to run time-to-event model using PAMMs
-- chicks_table: Table containing measuraments of chicks (several measuraments per chicks) annotated with their parents' biparentality and other movement/foraging parameters.
+- chicks_table: Table containing measuraments of chicks (several measuraments per chicks) annotated with their parents' provisioning share and other movement/foraging parameters.
 
 ## Scripts (.R)
 - 1.PredFlexBipCare: Script relative to the Result sub-sections: "Variation in biparental provisioning ", "Within-night adjustments of parental effort" and "Between-night carry-over effects"
